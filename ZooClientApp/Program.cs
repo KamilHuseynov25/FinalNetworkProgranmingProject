@@ -2,9 +2,10 @@
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-
+using System.Text.Json;
+using System.Text;
 HttpClient client = new HttpClient();
-string baseUrl = "http://localhost:7373/animals";
+string baseUrl = "http://localhost:7575/animals";
 
 bool flag = true;
 
@@ -139,8 +140,11 @@ async Task GetAnimalById(int id)
 
 async Task AddAnimal(Animal animal)
 {
-    var response = await client.PostAsJsonAsync(baseUrl, animal);
+    var animalJson = JsonSerializer.Serialize(animal);
+    var content = new StringContent(animalJson, Encoding.UTF8, "application/json");
+    var response = await client.PostAsJsonAsync(baseUrl, animalJson);
 
+    
     if (response.IsSuccessStatusCode)
     {
         string responseBody = await response.Content.ReadAsStringAsync();
@@ -157,8 +161,11 @@ async Task AddAnimal(Animal animal)
 
 async Task UpdateAnimal(int id, Animal animal)
 {
+    
+    var animalJson = JsonSerializer.Serialize(animal);
+    var content = new StringContent(animalJson, Encoding.UTF8, "application/json");
     var response = await client.PutAsJsonAsync($"{baseUrl}/{id}", animal);
-
+    
     if (response.IsSuccessStatusCode)
     {
         string responseBody = await response.Content.ReadAsStringAsync();
@@ -188,19 +195,5 @@ async Task DeleteAnimal(int id)
         string responseBody = await response.Content.ReadAsStringAsync();
         Console.WriteLine($"Error deleting animal: {response.StatusCode}");
         Console.WriteLine($"Server response: {responseBody}");
-    }
-}
-
-public class Animal
-{
-    public int Id { get; set; }
-    public required string? Name { get; set; }
-    public required string? Class { get; set; }
-    public bool IsMale { get; set; }
-
-    override public string ToString()
-    {
-        string gender = IsMale ? "Male" : "Female";
-        return $"Id: \"{Id}\" Name: \"{Name}\" Class: \"{Class}\" Gender: \"{gender}\"";
     }
 }
